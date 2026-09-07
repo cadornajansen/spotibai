@@ -34,6 +34,7 @@ if (app) {
   let likeRequestPending = false;
   let isSeeking = false;
   let progressRafId: number | null = null;
+  let currentPlaylist: (typeof playlists)[number] | null = null;
 
   const trackById = new Map(tracks.map((track) => [track.id, track]));
   const playlistById = new Map(playlists.map((playlist) => [playlist.id, playlist]));
@@ -125,11 +126,14 @@ if (app) {
   };
 
   const showPlaylist = (playlistId: string, shouldStore = false) => {
-    const playlistView = playlistViews.find((view) => view.dataset.playlistId === playlistId);
+    const playlistView = playlistViews.find((view) => view.dataset.playlistViewId === playlistId || view.dataset.playlistId === playlistId);
     if (!playlistView) return;
+    const pl = playlistById.get(playlistId);
+    if (pl) currentPlaylist = pl;
     hideViews();
     animateViewIn(playlistView);
     main?.scrollTo({ top: 0 });
+    renderPlaybackState();
     if (shouldStore) storeView({ view: 'playlist', playlistId });
   };
 
@@ -144,6 +148,22 @@ if (app) {
     all<HTMLElement>('[data-play-icon]').forEach((icon) => icon.classList.toggle('hidden', isPlaying));
     all<HTMLElement>('[data-pause-icon]').forEach((icon) => icon.classList.toggle('hidden', !isPlaying));
     all<HTMLButtonElement>('[data-play-toggle]').forEach((button) => button.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play'));
+    all<HTMLButtonElement>('[data-playlist-play]').forEach((button) => {
+      const plId = button.dataset.playlistPlay;
+      const isThisActive = isPlaying && currentPlaylist?.id === plId;
+      const playIcon = button.querySelector('[data-playlist-icon-play]');
+      const pauseIcon = button.querySelector('[data-playlist-icon-pause]');
+      if (playIcon) playIcon.classList.toggle('hidden', isThisActive);
+      if (pauseIcon) pauseIcon.classList.toggle('hidden', !isThisActive);
+      button.setAttribute('aria-label', isThisActive ? 'Pause playlist' : 'Play playlist');
+    });
+    all<HTMLElement>('[data-track-id]').forEach((row) => {
+      const isCurrent = row.dataset.trackId === currentTrack.id;
+      const titleSpan = row.querySelector('.truncate');
+      if (titleSpan) {
+        titleSpan.classList.toggle('text-lime', isCurrent);
+      }
+    });
   };
 
   const renderVideo = (track: Track) => {
@@ -337,21 +357,50 @@ if (app) {
 
   document.addEventListener('click', (event) => {
     const target = event.target as Element;
-    const playlistButton = target.closest<HTMLElement>('[data-playlist-id]');
-    if (playlistButton?.dataset.playlistId) {
-      showPlaylist(playlistButton.dataset.playlistId, true);
-      return;
-    }
     const playlistPlayButton = target.closest<HTMLElement>('[data-playlist-play]');
     if (playlistPlayButton?.dataset.playlistPlay) {
-      const playlist = playlistById.get(playlistPlayButton.dataset.playlistPlay);
-      if (playlist?.tracks[0]) selectTrack(playlist.tracks[0]);
+      const plId = playlistPlayButton.dataset.playlistPlay;
+      const playlist = playlistById.get(plId);
+      if (playlist) {
+        if (currentPlaylist?.id === plId) {
+          togglePlayback();
+          return;
+        }
+        currentPlaylist = playlist;
+        if (playlist.tracks[0]) selectTrack(playlist.tracks[0]);
+      }
       return;
     }
     const trackButton = target.closest<HTMLElement>('[data-track-id]');
     if (trackButton) {
-      const nextTrack = trackById.get(trackButton.dataset.trackId ?? '');
-      if (nextTrack) selectTrack(nextTrack, true);
+      const trackId = trackButton.dataset.trackId ?? '';
+      const nextTrack = trackById.get(trackId);
+      const parentPlaylist = trackButton.closest<HTMLElement>('[data-playlist-view]');
+      const playlistId = parentPlaylist?.dataset.playlistViewId || parentPlaylist?.dataset.playlistId;
+      if (playlistId) {
+        const pl = playlistById.get(playlistId);
+        if (pl) currentPlaylist = pl;
+      }
+      if (nextTrack) {
+        selectTrack(nextTrack, true);
+      }
+      return;
+    }
+    const playlistButton = target.closest<HTMLElement>('button[data-playlist-id], [data-playlist-id]:not([data-playlist-view])');
+    if (playlistButton?.dataset.playlistId) {
+      showPlaylist(playlistButton.dataset.playlistId, true);
+      return;
+    }
+    if (target.closest('[data-open-lyrics]')) {
+      if (lyricsView && !lyricsView.classList.contains('hidden')) {
+        showHome(true);
+      } else {
+        openLyrics(true);
+      }
+      return;
+    }
+    if (target.closest('[data-player-cover], [data-player-title]')) {
+      openLyrics(true);
       return;
     }
     if (target.closest('[data-play-toggle]')) return togglePlayback();
@@ -376,9 +425,11 @@ if (app) {
 
   all<HTMLButtonElement>('[data-player-next], [data-player-previous]').forEach((button) => {
     button.addEventListener('click', () => {
-      const index = tracks.findIndex((track) => track.id === currentTrack.id);
+      const queue = currentPlaylist ? currentPlaylist.tracks : tracks;
+      const index = queue.findIndex((track) => track.id === currentTrack.id);
       const offset = button.hasAttribute('data-player-next') ? 1 : -1;
-      selectTrack(tracks[(index + offset + tracks.length) % tracks.length]);
+      const nextIndex = index === -1 ? 0 : (index + offset + queue.length) % queue.length;
+      selectTrack(queue[nextIndex]);
     });
   });
 
@@ -452,10 +503,14 @@ if (app) {
 
   window.addEventListener('popstate', (event) => {
     const state = event.state as ViewState | null;
-    if (!state || state.view === 'home') return showHome();
-    if (state.view === 'search') return showSearch();
-    if (state.view === 'playlist' && state.playlistId) return showPlaylist(state.playlistId);
-    if (state.view === 'lyrics') openLyrics();
+    const hash = window.location.hash;
+    if (hash === '#lyrics' || state?.view === 'lyrics') return openLyrics();
+    if (hash.startsWith('#playlist=') || (state?.view === 'playlist' && state.playlistId)) {
+      const id = state?.playlistId || hash.replace('#playlist=', '');
+      return showPlaylist(id);
+    }
+    if (hash === '#search' || state?.view === 'search') return showSearch();
+    return showHome();
   });
 
   if (audio) {
@@ -481,10 +536,16 @@ if (app) {
       renderLyrics();
     });
     audio.addEventListener('ended', () => {
-      isPlaying = false;
-      renderPlaybackState();
-      stopProgressLoop();
-      updateProgress();
+      const queue = currentPlaylist ? currentPlaylist.tracks : tracks;
+      const index = queue.findIndex((track) => track.id === currentTrack.id);
+      if (index !== -1 && index + 1 < queue.length) {
+        selectTrack(queue[index + 1]);
+      } else {
+        isPlaying = false;
+        renderPlaybackState();
+        stopProgressLoop();
+        updateProgress();
+      }
     });
   }
 
@@ -493,5 +554,14 @@ if (app) {
   renderVideo(currentTrack);
   renderPlaybackState();
   void requestLikeState('GET');
-  window.history.replaceState({ view: 'home' } satisfies ViewState, '', window.location.pathname);
+  const initialHash = window.location.hash;
+  if (initialHash === '#lyrics') {
+    openLyrics(false);
+  } else if (initialHash.startsWith('#playlist=')) {
+    showPlaylist(initialHash.replace('#playlist=', ''), false);
+  } else if (initialHash === '#search') {
+    showSearch(false);
+  } else {
+    window.history.replaceState({ view: 'home' } satisfies ViewState, '', window.location.pathname);
+  }
 }
