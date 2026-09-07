@@ -1,5 +1,8 @@
+import { inject } from '@vercel/analytics';
 import { nowPlaying, playlists, tracks } from '../data/spotify';
 import type { Track } from '../types/library';
+
+inject();
 
 type LyricLine = { time: number; element: HTMLButtonElement };
 type ViewState = { view: 'home' | 'search' | 'playlist' | 'lyrics'; playlistId?: string };
@@ -29,6 +32,8 @@ if (app) {
   let activeLyricIndex = -1;
   let likeRequestId = 0;
   let likeRequestPending = false;
+  let isSeeking = false;
+  let progressRafId: number | null = null;
 
   const trackById = new Map(tracks.map((track) => [track.id, track]));
   const playlistById = new Map(playlists.map((playlist) => [playlist.id, playlist]));
@@ -234,13 +239,37 @@ if (app) {
   const updateProgress = () => {
     if (!audio) return;
     const duration = Number.isFinite(audio.duration) ? audio.duration : 0;
-    all<HTMLInputElement>('[data-seek]').forEach((input) => {
-      input.max = String(duration || 1);
-      input.value = String(audio.currentTime);
-      setRangeFill(input);
-    });
-    setText('[data-elapsed]', formatTime(audio.currentTime));
+    if (!isSeeking) {
+      all<HTMLInputElement>('[data-seek]').forEach((input) => {
+        input.max = String(duration || 1);
+        input.value = String(audio.currentTime);
+        setRangeFill(input);
+      });
+      setText('[data-elapsed]', formatTime(audio.currentTime));
+    }
     setText('[data-player-duration]', duration ? formatTime(duration) : currentTrack.duration);
+  };
+
+  const startProgressLoop = () => {
+    if (progressRafId) cancelAnimationFrame(progressRafId);
+    const loop = () => {
+      if (isPlaying && audio && !audio.paused) {
+        if (!isSeeking) {
+          updateProgress();
+        }
+        progressRafId = requestAnimationFrame(loop);
+      } else {
+        progressRafId = null;
+      }
+    };
+    progressRafId = requestAnimationFrame(loop);
+  };
+
+  const stopProgressLoop = () => {
+    if (progressRafId) {
+      cancelAnimationFrame(progressRafId);
+      progressRafId = null;
+    }
   };
 
   const selectTrack = (track: Track, shouldOpenLyrics = false) => {
@@ -353,10 +382,33 @@ if (app) {
     });
   });
 
-  all<HTMLInputElement>('[data-seek]').forEach((input) => input.addEventListener('input', () => {
-    setRangeFill(input);
-    if (audio) audio.currentTime = Number(input.value);
-  }));
+  all<HTMLInputElement>('[data-seek]').forEach((input) => {
+    const handleStart = () => {
+      isSeeking = true;
+    };
+    const handleInput = () => {
+      setRangeFill(input);
+      setText('[data-elapsed]', formatTime(Number(input.value)));
+    };
+    const handleEnd = () => {
+      if (isSeeking) {
+        if (audio) audio.currentTime = Number(input.value);
+        isSeeking = false;
+        updateProgress();
+      }
+    };
+
+    input.addEventListener('pointerdown', handleStart);
+    input.addEventListener('mousedown', handleStart);
+    input.addEventListener('touchstart', handleStart, { passive: true });
+
+    input.addEventListener('input', handleInput);
+
+    input.addEventListener('change', handleEnd);
+    input.addEventListener('pointerup', handleEnd);
+    input.addEventListener('mouseup', handleEnd);
+    input.addEventListener('touchend', handleEnd);
+  });
   all<HTMLInputElement>('[data-volume]').forEach((input) => input.addEventListener('input', () => {
     setRangeFill(input);
     if (audio) audio.volume = Number(input.value) / 100;
@@ -409,11 +461,31 @@ if (app) {
   if (audio) {
     audio.volume = 0.66;
     all<HTMLInputElement>('[data-volume]').forEach((input) => setRangeFill(input));
-    audio.addEventListener('play', () => { isPlaying = true; renderPlaybackState(); syncVideo(); });
-    audio.addEventListener('pause', () => { isPlaying = false; renderPlaybackState(); syncVideo(); });
+    audio.addEventListener('play', () => {
+      isPlaying = true;
+      renderPlaybackState();
+      syncVideo();
+      startProgressLoop();
+    });
+    audio.addEventListener('pause', () => {
+      isPlaying = false;
+      renderPlaybackState();
+      syncVideo();
+      stopProgressLoop();
+      updateProgress();
+    });
     audio.addEventListener('loadedmetadata', updateProgress);
-    audio.addEventListener('timeupdate', () => { updateProgress(); syncVideo(); renderLyrics(); });
-    audio.addEventListener('ended', () => { isPlaying = false; renderPlaybackState(); });
+    audio.addEventListener('timeupdate', () => {
+      if (!isPlaying) updateProgress();
+      syncVideo();
+      renderLyrics();
+    });
+    audio.addEventListener('ended', () => {
+      isPlaying = false;
+      renderPlaybackState();
+      stopProgressLoop();
+      updateProgress();
+    });
   }
 
   const hour = new Date().getHours();

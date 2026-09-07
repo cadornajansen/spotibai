@@ -8,7 +8,11 @@ const siteUrl = process.env.PUBLIC_SITE_URL || 'https://example.com';
 export default defineConfig({
   site: siteUrl,
   output: 'server',
-  adapter: vercel(),
+  adapter: vercel({
+    webAnalytics: {
+      enabled: true,
+    },
+  }),
   publicDir: './songs',
   integrations: [
     sitemap({
