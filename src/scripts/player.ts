@@ -79,8 +79,11 @@ if (app) {
     setLikeStatus(method === 'GET' ? 'Loading likes' : 'Updating like');
 
     try {
-      const response = await fetch(`/api/likes/${encodeURIComponent(track.id)}`, { method });
-      if (!response.ok) throw new Error('Like request failed');
+      const response = await fetch(`/api/likes/${encodeURIComponent(track.id)}`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) throw new Error(`Like request failed with status ${response.status}`);
       const state = await response.json() as LikeState;
       if (requestId !== likeRequestId || track.id !== currentTrack.id) return;
       if (state.configured === false) {
@@ -91,7 +94,8 @@ if (app) {
       }
       renderLikeState(state);
       setLikeStatus(`${state.count} ${state.count === 1 ? 'like' : 'likes'}; ${state.liked ? 'liked' : 'not liked'}`);
-    } catch {
+    } catch (error) {
+      console.error('[Spotibai] Like request failed', error);
       if (requestId !== likeRequestId || track.id !== currentTrack.id) return;
       renderLikeState({ count: Number(all<HTMLElement>('[data-like-count]')[0]?.textContent) || 0, liked: false });
       setLikeStatus(method === 'GET' ? 'Could not load likes' : 'Could not update like');
