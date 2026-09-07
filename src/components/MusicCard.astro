@@ -16,20 +16,22 @@ const description = item.description ?? ('artist' in item ? item.artist : undefi
 
 {variant === 'quick' ? (
   <article class="min-w-0">
-    <button class="group flex h-16 w-full items-center overflow-hidden rounded-md bg-[#2a2a2a] text-left transition hover:bg-[#3a3a3a]" {...itemTarget} aria-label={`${isPlaylist ? 'Open' : 'Play'} ${item.title}`}>
-      <img class="size-16 shrink-0 object-cover" src={item.cover} alt={`${item.title} cover`} width="64" height="64" loading="lazy" />
+    <button class="group flex h-16 w-full items-center overflow-hidden rounded-md bg-[#2a2a2a] text-left transition-all duration-200 hover:bg-[#383838] active:scale-[0.99]" {...itemTarget} aria-label={`${isPlaylist ? 'Open' : 'Play'} ${item.title}`}>
+      <div class="size-16 shrink-0 overflow-hidden">
+        <img class="size-full object-cover transition-transform duration-200 group-hover:scale-105" src={item.cover} alt={`${item.title} cover`} width="64" height="64" loading="lazy" />
+      </div>
       <span class="min-w-0 flex-1 truncate px-3 text-sm font-bold text-white">{item.title}</span>
-      <span class="mr-3 grid size-10 shrink-0 place-items-center rounded-full bg-lime text-black opacity-0 transition group-hover:opacity-100"><Play size={18} fill="currentColor" /></span>
+      <span class="mr-3 grid size-10 shrink-0 place-items-center rounded-full bg-lime text-black opacity-0 translate-x-1 shadow-lg transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-105 active:scale-95"><Play size={18} fill="currentColor" /></span>
     </button>
   </article>
 ) : (
-  <article class:list={["group relative min-w-0 rounded-md p-3 transition hover:bg-[#1f1f1f]", compact ? "w-[158px] sm:w-[174px]" : "w-full"]}>
-    <button class="block w-full text-left" {...itemTarget} aria-label={`${isPlaylist ? 'Open' : 'Play'} ${item.title}`}>
-      <div class="relative aspect-square overflow-hidden rounded bg-panel-raised">
-        <img class="size-full object-cover" src={item.cover} alt={`${item.title} cover`} width="200" height="200" loading="lazy" />
-        <span class="absolute bottom-2 right-2 grid size-10 place-items-center rounded-full bg-lime text-black opacity-0 transition group-hover:opacity-100"><Play size={19} fill="currentColor" /></span>
+  <article class:list={["group relative min-w-0 rounded-md p-3 transition-all duration-200 hover:bg-[#222222]", compact ? "w-[158px] sm:w-[174px]" : "w-full"]}>
+    <button class="block w-full text-left active:scale-[0.99] transition-transform duration-100" {...itemTarget} aria-label={`${isPlaylist ? 'Open' : 'Play'} ${item.title}`}>
+      <div class="relative aspect-square overflow-hidden rounded bg-panel-raised shadow-md">
+        <img class="size-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]" src={item.cover} alt={`${item.title} cover`} width="200" height="200" loading="lazy" />
+        <span class="absolute bottom-2 right-2 grid size-11 place-items-center rounded-full bg-lime text-black opacity-0 translate-y-2.5 shadow-[0_8px_16px_rgba(0,0,0,0.5)] transition-all duration-200 ease-out group-hover:opacity-100 group-hover:translate-y-0 hover:scale-105 active:scale-95"><Play size={20} fill="currentColor" /></span>
       </div>
-      <h3 class="mt-3 truncate text-sm font-bold text-white">{item.title}</h3>
+      <h3 class="mt-3 truncate text-sm font-bold text-white transition-colors duration-150">{item.title}</h3>
       <p class="mt-1 line-clamp-2 text-xs leading-5 text-[#b3b3b3]">{description}</p>
     </button>
   </article>

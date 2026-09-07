@@ -140,31 +140,31 @@ const safeJsonLd = JSON.stringify(structuredData).replace(/</g, '\\u003c');
       <Sidebar playlists={playlists} nowPlaying={nowPlaying} />
       <main class="app-scroll h-screen min-w-0 flex-1 overflow-y-auto pb-40 lg:pb-28">
         <Topbar />
-        <div class="px-4 pb-12 pt-6 sm:px-7 xl:px-9" data-home-view>
+        <div class="px-4 pb-12 pt-6 sm:px-7 xl:px-9 animate-fade-in" data-home-view>
           <h1 class="sr-only">Spotibai — Streaming Web Player & Fictional Music Catalogue</h1>
           <p class="text-2xl font-bold tracking-tight text-white sm:text-3xl" data-greeting>{greeting}</p>
-          <section class="mt-6" aria-label="Quick picks">
+          <section class="mt-6 animate-fade-in delay-1" aria-label="Quick picks">
             <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-4">
               {topTracks.map((item) => <MusicCard item={item} variant="quick" />)}
             </div>
           </section>
 
-          <section class="mt-10" aria-labelledby="made-for-you">
-            <div class="mb-3 flex items-end justify-between"><h2 id="made-for-you" class="text-2xl font-bold tracking-tight text-white">Made for you</h2><button class="text-sm font-bold text-[#b3b3b3] hover:underline hover:text-white">Show all</button></div>
+          <section class="mt-10 animate-fade-in delay-2" aria-labelledby="made-for-you">
+            <div class="mb-3 flex items-end justify-between"><h2 id="made-for-you" class="text-2xl font-bold tracking-tight text-white">Made for you</h2><button class="text-sm font-bold text-[#b3b3b3] hover:underline hover:text-white transition-colors">Show all</button></div>
             <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">{madeForYou.map((item) => <MusicCard item={item} />)}</div>
           </section>
 
-          <section class="mt-10" aria-labelledby="recently-added">
-            <div class="mb-3 flex items-end justify-between"><h2 id="recently-added" class="text-2xl font-bold tracking-tight text-white">Recently added</h2><button class="text-sm font-bold text-[#b3b3b3] hover:underline hover:text-white">Show all</button></div>
+          <section class="mt-10 animate-fade-in delay-3" aria-labelledby="recently-added">
+            <div class="mb-3 flex items-end justify-between"><h2 id="recently-added" class="text-2xl font-bold tracking-tight text-white">Recently added</h2><button class="text-sm font-bold text-[#b3b3b3] hover:underline hover:text-white transition-colors">Show all</button></div>
             <div class="grid max-w-3xl gap-x-5 sm:grid-cols-2">{recentlyAdded.map((item, index) => <TrackRow track={tracks.find((track) => track.id === item.trackId)!} index={index} />)}</div>
           </section>
 
-          <section class="mt-10" id="library" aria-labelledby="weird-playlists">
-            <div class="mb-3 flex items-end justify-between"><h2 id="weird-playlists" class="text-2xl font-bold tracking-tight text-white">Your weirdest playlists</h2><button class="text-sm font-bold text-[#b3b3b3] hover:underline hover:text-white">Show all</button></div>
+          <section class="mt-10 animate-fade-in delay-4" id="library" aria-labelledby="weird-playlists">
+            <div class="mb-3 flex items-end justify-between"><h2 id="weird-playlists" class="text-2xl font-bold tracking-tight text-white">Your weirdest playlists</h2><button class="text-sm font-bold text-[#b3b3b3] hover:underline hover:text-white transition-colors">Show all</button></div>
             <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-4">{playlists.map((item) => <MusicCard item={item} />)}</div>
           </section>
         </div>
-        <section class="hidden px-4 pb-12 pt-7 sm:px-7 xl:px-9" data-search-view aria-label="Search results">
+        <section class="hidden px-4 pb-12 pt-7 sm:px-7 xl:px-9 animate-fade-in" data-search-view aria-label="Search results">
           <p class="text-sm text-[#b3b3b3]" data-search-summary>Start typing to search your local music.</p>
           <div class="mt-5 space-y-1" data-search-results></div>
         </section>

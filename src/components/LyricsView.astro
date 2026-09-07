@@ -2,15 +2,15 @@
 import type { Track } from '../types/library';
 
 interface Props { track: Track; }
-const { track } = Astro.props;
+const { track: _track } = Astro.props;
 ---
 
-<section class="hidden min-h-[calc(100dvh-72px)] px-[5px] pb-32 pt-[5px]" data-lyrics-view aria-label="Synced lyrics">
+<section class="hidden min-h-[calc(100dvh-72px)] px-[5px] pb-32 pt-[5px] animate-fade-in" data-lyrics-view aria-label="Synced lyrics">
   <div class="w-full">
-    <div class="overflow-hidden rounded-xl bg-[#3a2923]">
-      <div class="scrollbar-hidden h-[calc(100dvh-170px)] overflow-y-auto px-7 py-10 sm:px-12" data-lyrics-scroll>
+    <div class="overflow-hidden rounded-xl bg-gradient-to-b from-[#3a2923] to-[#251a16] shadow-xl transition-colors duration-500">
+      <div class="scrollbar-hidden h-[calc(100dvh-170px)] overflow-y-auto px-7 py-10 sm:px-12 scroll-smooth" data-lyrics-scroll>
         <p class="hidden text-base text-[#e0c9ba]" data-lyrics-empty>Lyrics are not available for this track yet.</p>
-        <div class="space-y-7 pb-20" data-lyrics-lines aria-live="polite"></div>
+        <div class="space-y-7 pb-20 transition-all duration-300" data-lyrics-lines aria-live="polite"></div>
       </div>
     </div>
   </div>

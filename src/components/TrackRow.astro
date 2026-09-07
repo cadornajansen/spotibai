@@ -6,9 +6,9 @@ interface Props { track: Track; index: number; }
 const { track, index } = Astro.props;
 ---
 
-<button type="button" class="group flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition hover:bg-white/7" data-track-id={track.id} aria-label={`Play ${track.title}`}>
-  <span class="w-4 text-center text-xs text-slate-500 group-hover:hidden">{index + 1}</span><span class="hidden w-4 text-center text-lime group-hover:block"><Play size={13} fill="currentColor" /></span>
-  <img class="size-10 rounded-md object-cover" src={track.cover} alt={`${track.title} cover`} width="40" height="40" loading="lazy" />
-  <span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold text-slate-100">{track.title}</span><span class="block truncate text-xs text-slate-500">{track.artist}</span></span>
-  <span class="pr-2 text-xs tabular-nums text-slate-500">{track.duration}</span>
+<button type="button" class="group flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-all duration-150 hover:bg-white/10 active:scale-[0.99] active:bg-white/15" data-track-id={track.id} aria-label={`Play ${track.title}`}>
+  <span class="w-4 text-center text-xs text-slate-400 group-hover:hidden">{index + 1}</span><span class="hidden w-4 text-center text-lime group-hover:block transition-transform duration-150 group-hover:scale-110"><Play size={13} fill="currentColor" /></span>
+  <img class="size-10 rounded-md object-cover shadow-sm transition-transform duration-200 group-hover:scale-105" src={track.cover} alt={`${track.title} cover`} width="40" height="40" loading="lazy" />
+  <span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold text-slate-100 transition-colors group-hover:text-lime">{track.title}</span><span class="block truncate text-xs text-slate-400">{track.artist}</span></span>
+  <span class="pr-2 text-xs tabular-nums text-slate-400">{track.duration}</span>
 </button>

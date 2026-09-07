@@ -7,7 +7,7 @@ interface Props { playlist: Playlist; }
 const { playlist } = Astro.props;
 ---
 
-<section class="hidden px-4 pb-12 pt-7 sm:px-7 xl:px-9" data-playlist-view data-playlist-id={playlist.id} aria-label={`${playlist.title} playlist`}>
+<section class="hidden px-4 pb-12 pt-7 sm:px-7 xl:px-9 animate-fade-in" data-playlist-view data-playlist-id={playlist.id} aria-label={`${playlist.title} playlist`}>
   <div class="-mx-4 bg-[#282828] px-4 pb-7 pt-10 sm:-mx-7 sm:px-7 xl:-mx-9 xl:px-9">
     <div class="flex items-end gap-5">
       <img class="size-32 rounded object-cover shadow-2xl sm:size-44" src={playlist.cover} alt={`${playlist.title} playlist cover`} width="176" height="176" loading="lazy" />
@@ -20,7 +20,7 @@ const { playlist } = Astro.props;
     </div>
   </div>
   <div class="mt-6 flex items-center gap-4">
-    <button class="grid size-12 place-items-center rounded-full bg-lime text-black transition hover:scale-105" type="button" data-playlist-play={playlist.id} aria-label={`Play ${playlist.title}`}><Play size={22} fill="currentColor" /></button>
+    <button class="grid size-12 place-items-center rounded-full bg-lime text-black shadow-lg shadow-black/40 transition-all duration-200 hover:scale-105 hover:brightness-105 active:scale-95" type="button" data-playlist-play={playlist.id} aria-label={`Play ${playlist.title}`}><Play size={22} fill="currentColor" /></button>
     <span class="text-sm text-[#b3b3b3]">{playlist.tracks.length} tracks</span>
   </div>
   <div class="mt-6 border-t border-line pt-3">

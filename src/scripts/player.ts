@@ -34,7 +34,13 @@ if (app) {
   const playlistById = new Map(playlists.map((playlist) => [playlist.id, playlist]));
   const all = <T extends Element>(selector: string) => Array.from(document.querySelectorAll<T>(selector));
   const setText = (selector: string, value: string) => all<HTMLElement>(selector).forEach((element) => { element.textContent = value; });
-  const setImage = (selector: string, track: Track) => all<HTMLImageElement>(selector).forEach((image) => { image.src = track.cover; image.alt = `${track.title} cover`; });
+  const setImage = (selector: string, track: Track) => all<HTMLImageElement>(selector).forEach((image) => {
+    image.src = track.cover;
+    image.alt = `${track.title} cover`;
+    image.classList.remove('animate-fade-quick');
+    void image.offsetWidth;
+    image.classList.add('animate-fade-quick');
+  });
   const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, '0')}`;
 
   const renderLikeState = (state: LikeState, pending = false) => {
@@ -46,7 +52,14 @@ if (app) {
       button.setAttribute('aria-label', available ? `${state.liked ? 'Unlike' : 'Like'} ${currentTrack.title}` : 'Likes are unavailable until Redis is configured');
       button.classList.toggle('text-lime', state.liked);
     });
-    all<SVGElement>('[data-like-icon]').forEach((icon) => icon.classList.toggle('fill-[#1ed760]', state.liked));
+    all<SVGElement>('[data-like-icon]').forEach((icon) => {
+      icon.classList.toggle('fill-[#1ed760]', state.liked);
+      if (state.liked && !pending) {
+        icon.classList.remove('animate-heart-pop');
+        void (icon as unknown as HTMLElement).offsetWidth;
+        icon.classList.add('animate-heart-pop');
+      }
+    });
     setText('[data-like-count]', String(state.count));
   };
 
@@ -91,9 +104,17 @@ if (app) {
     window.history.pushState(state, '', `${window.location.pathname}${hash}`);
   };
 
+  const animateViewIn = (el: HTMLElement | null | undefined) => {
+    if (!el) return;
+    el.classList.remove('hidden');
+    el.classList.remove('animate-fade-in');
+    void el.offsetWidth;
+    el.classList.add('animate-fade-in');
+  };
+
   const showHome = (shouldStore = false) => {
     hideViews();
-    homeView?.classList.remove('hidden');
+    animateViewIn(homeView);
     main?.scrollTo({ top: 0 });
     if (shouldStore) storeView({ view: 'home' });
   };
@@ -102,14 +123,14 @@ if (app) {
     const playlistView = playlistViews.find((view) => view.dataset.playlistId === playlistId);
     if (!playlistView) return;
     hideViews();
-    playlistView.classList.remove('hidden');
+    animateViewIn(playlistView);
     main?.scrollTo({ top: 0 });
     if (shouldStore) storeView({ view: 'playlist', playlistId });
   };
 
   const showSearch = (shouldStore = false) => {
     hideViews();
-    searchView?.classList.remove('hidden');
+    animateViewIn(searchView);
     main?.scrollTo({ top: 0 });
     if (shouldStore) storeView({ view: 'search' });
   };
@@ -143,8 +164,13 @@ if (app) {
     const currentIndex = lyricLines.reduce((latestIndex, line, index) => line.time <= audio.currentTime ? index : latestIndex, -1);
     if (currentIndex === activeLyricIndex) return;
     lyricLines.forEach((line, index) => {
-      line.element.classList.toggle('text-white', index === currentIndex);
-      line.element.classList.toggle('text-[#c9aa9a]', index !== currentIndex);
+      const isActive = index === currentIndex;
+      line.element.classList.toggle('text-white', isActive);
+      line.element.classList.toggle('scale-[1.02]', isActive);
+      line.element.classList.toggle('opacity-100', isActive);
+      line.element.classList.toggle('text-[#c9aa9a]', !isActive);
+      line.element.classList.toggle('scale-100', !isActive);
+      line.element.classList.toggle('opacity-40', !isActive);
     });
     activeLyricIndex = currentIndex;
     const activeLine = lyricLines[currentIndex]?.element;
@@ -178,7 +204,7 @@ if (app) {
         const element = document.createElement('button');
         element.type = 'button';
         element.dataset.lyricTime = String(line.time);
-        element.className = 'block w-full text-left text-2xl font-bold leading-tight text-[#c9aa9a] transition-colors hover:text-white sm:text-5xl';
+        element.className = 'block w-full text-left text-2xl font-bold leading-tight text-[#c9aa9a] opacity-40 scale-100 transition-all duration-300 origin-left hover:text-white hover:opacity-80 sm:text-5xl';
         element.textContent = line.text;
         lyricsContainer.append(element);
         return { time: line.time, element };
@@ -191,7 +217,7 @@ if (app) {
 
   const openLyrics = (shouldStore = false) => {
     hideViews();
-    lyricsView?.classList.remove('hidden');
+    animateViewIn(lyricsView);
     main?.scrollTo({ top: 0 });
     void loadLyrics(currentTrack);
     if (shouldStore) storeView({ view: 'lyrics' });
@@ -244,11 +270,12 @@ if (app) {
     searchSummary.textContent = normalizedQuery
       ? `${matches.length} ${matches.length === 1 ? 'result' : 'results'} for “${query.trim()}”`
       : 'Start typing to search your local music.';
-    matches.forEach((track) => {
+    matches.forEach((track, idx) => {
       const result = document.createElement('button');
       result.type = 'button';
       result.dataset.trackId = track.id;
-      result.className = 'group flex w-full items-center gap-3.5 rounded-lg px-3 py-2.5 text-left transition-all duration-150 hover:bg-white/10 active:bg-white/15';
+      result.className = 'group flex w-full items-center gap-3.5 rounded-lg px-3 py-2.5 text-left transition-all duration-150 hover:bg-white/10 active:bg-white/15 animate-fade-quick';
+      result.style.animationDelay = `${Math.min(idx * 30, 200)}ms`;
       result.setAttribute('aria-label', `Play ${track.title}`);
       const image = document.createElement('img');
       image.src = track.cover;
