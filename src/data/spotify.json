@@ -139,6 +139,41 @@
       "madeForYou": true,
       "recentlyAdded": false,
       "nowPlaying": false
+    },
+    {
+      "id": "7680864084975308050",
+      "title": "Zebiana",
+      "author": "spotibai_ph",
+      "coverPath": "",
+      "thumbnailUrl": "https://p16-common-sign.tiktokcdn.com/tos-alisg-p-0037/osCAFDeIjALTVv04AQCIjfALzwQlLTIYGTe96X~tplv-tiktokx-origin.image?dr=14575&x-expires=1788958800&x-signature=Jh%2FeBEVr7WbTnZIJgyGZA7I0lXE%3D&t=4d5b0474&ps=13740610&shp=81f88b70&shcp=43f4a2f9&idc=my",
+      "sourceUrl": "https://www.tiktok.com/@spotibai_ph/video/7680864084975308050?q=spotibai&t=1788786757428",
+      "folderPath": "songs/para-maka-premium-dito-sa-spotibai-pindutin-lang-yung-follow-spotiba",
+      "videoPath": "songs/para-maka-premium-dito-sa-spotibai-pindutin-lang-yung-follow-spotiba/Para_maka_Premium_dito_sa_Spotibai_pindutin_lang_yung_Follow_spotiba... [7680864084975308050].mp4",
+      "audioPath": "songs/para-maka-premium-dito-sa-spotibai-pindutin-lang-yung-follow-spotiba/Para_maka_Premium_dito_sa_Spotibai_pindutin_lang_yung_Follow_spotiba... [7680864084975308050].m4a",
+      "lyricsPath": "songs/para-maka-premium-dito-sa-spotibai-pindutin-lang-yung-follow-spotiba/Para_maka_Premium_dito_sa_Spotibai_pindutin_lang_yung_Follow_spotiba... [7680864084975308050].lrc",
+      "durationSeconds": 19,
+      "top": true,
+      "madeForYou": true,
+      "recentlyAdded": true,
+      "nowPlaying": false
+    },
+    {
+      "id": "7682619525434494215",
+      "title": "Update",
+      "author": "SpotiBai",
+      "coverPath": "songs/update/cover.jpg",
+      "thumbnailUrl": "https://p19-common-sign.tiktokcdn-us.com/tos-alisg-p-0037/ok5EBnzUfQAiGDnxojST8fDjwgEziBDcqQuRGF~tplv-tiktokx-cropcenter-q:300:400:q70.jpeg?dr=8596&refresh_token=2113d23f&x-expires=1788872400&x-signature=VwtHvuVTDRacRZzkvMVizmFaBI4%3D&t=bacd0480&ps=933b5bde&shp=d05b14bd&shcp=1d1a97fc&idc=useast5&biz_tag=tt_video&s=AWEME_DETAIL&sc=cover",
+      "sourceUrl": "https://www.tiktok.com/@spotibai82/video/7682619525434494215?is_from_webapp=1&sender_device=pc",
+      "folderPath": "songs/update",
+      "videoPath": "songs/update/Update [7682619525434494215].mp4",
+      "audioPath": "songs/update/Update [7682619525434494215].m4a",
+      "lyricsPath": "songs/update/Update [7682619525434494215].lrc",
+      "durationSeconds": 15,
+      "artistBio": "SpotiBai is credited as the artist on this local track.",
+      "top": true,
+      "madeForYou": true,
+      "recentlyAdded": true,
+      "nowPlaying": false
     }
   ],
   "playlists": [

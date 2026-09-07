@@ -22,7 +22,9 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
+import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -74,6 +76,15 @@ def parse_arguments() -> argparse.Namespace:
         default=42,
         help="Maximum characters per generated lyric line (default: 42).",
     )
+    parser.add_argument(
+        "--cookies",
+        type=Path,
+        help="Path to a cookies.txt file in Netscape format.",
+    )
+    parser.add_argument(
+        "--cookies-from-browser",
+        help="Browser name to extract cookies from (e.g. firefox, chrome, edge, brave).",
+    )
     return parser.parse_args()
 
 
@@ -87,7 +98,14 @@ def validate_tiktok_url(url: str) -> None:
 def require_dependencies() -> str:
     api_key = os.environ.get("ASSEMBLYAI_API_KEY")
     if not api_key:
-        raise RuntimeError("ASSEMBLYAI_API_KEY is not set. Set it in your environment, then run the script again.")
+        env_file = PROJECT_ROOT / ".env"
+        if env_file.exists():
+            for line in env_file.read_text(encoding="utf-8").splitlines():
+                if line.startswith("ASSEMBLYAI_API_KEY="):
+                    api_key = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    break
+    if not api_key:
+        raise RuntimeError("ASSEMBLYAI_API_KEY is not set. Set it in your environment or .env, then run the script again.")
     if shutil.which("ffmpeg") is None:
         raise RuntimeError("FFmpeg was not found on PATH. Install FFmpeg, then run the script again.")
     return api_key
@@ -100,53 +118,150 @@ def song_folder_name(title: str, video_id: str) -> str:
     return name or f"song-{video_id}"
 
 
-def fetch_metadata(url: str) -> dict[str, Any]:
-    with YoutubeDL({"noplaylist": True, "quiet": True}) as downloader:
+def build_ydl_cookie_opts(
+    cookies: Path | None = None,
+    cookies_from_browser: str | None = None,
+) -> dict[str, Any]:
+    opts: dict[str, Any] = {}
+    if cookies:
+        opts["cookiefile"] = str(cookies.resolve())
+    if cookies_from_browser:
+        opts["cookiesfrombrowser"] = (cookies_from_browser,)
+    return opts
+
+
+def fetch_metadata(url: str, cookie_opts: dict[str, Any] | None = None) -> dict[str, Any]:
+    ydl_opts: dict[str, Any] = {"noplaylist": True, "quiet": True}
+    if cookie_opts:
+        ydl_opts.update(cookie_opts)
+    with YoutubeDL(ydl_opts) as downloader:
         info = downloader.extract_info(url, download=False)
     if not isinstance(info, dict) or not info.get("id"):
         raise RuntimeError("yt-dlp did not return video metadata for this URL.")
     return info
 
 
-def download_media(url: str, songs_dir: Path) -> tuple[Path, Path, dict[str, Any], Path]:
-    """Download the MP4 and extract an M4A into songs/<song-name>/."""
+def download_media_fallback(url: str, songs_dir: Path) -> tuple[Path, Path, dict[str, Any], Path]:
+    """Fallback extraction using public TikTok video stream when yt-dlp encounters cookie/auth blocks."""
+    print("Extracting video stream via direct TikTok service…")
+    api_url = f"https://www.tikwm.com/api/?url={url}"
+    req = urllib.request.Request(
+        api_url,
+        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"},
+    )
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        api_data = json.loads(resp.read().decode("utf-8"))
 
-    metadata = fetch_metadata(url)
-    video_id = str(metadata["id"])
-    title = str(metadata.get("title") or video_id)
-    song_dir = songs_dir / song_folder_name(title, video_id)
+    if api_data.get("code") != 0 or not api_data.get("data"):
+        raise RuntimeError(f"Fallback TikTok API error: {api_data.get('msg') or 'Unknown error'}")
+
+    d = api_data["data"]
+    video_id = str(d.get("id") or "")
+    raw_title = str(d.get("title") or video_id).strip()
+    author = str(d.get("author", {}).get("nickname") or d.get("author", {}).get("unique_id") or "SpotiBai")
+    video_url = d.get("play")
+    cover_url = d.get("cover")
+    duration = d.get("duration")
+
+    clean_title = re.sub(r"[#@][\w]+", "", raw_title).strip()
+    clean_title = re.sub(r"[^\w\s\-\.\,\'\(\)]", "", clean_title).strip()
+    if not clean_title:
+        clean_title = f"song-{video_id}"
+
+    song_dir = songs_dir / song_folder_name(clean_title, video_id)
     song_dir.mkdir(parents=True, exist_ok=True)
 
-    options = {
-        "format": "bv*+ba/b",
-        "merge_output_format": "mp4",
-        "outtmpl": str(song_dir / "%(title).80s [%(id)s].%(ext)s"),
-        "noplaylist": True,
-        "restrictfilenames": True,
-        "postprocessors": [
-            {
-                "key": "FFmpegExtractAudio",
-                "preferredcodec": "m4a",
-                "preferredquality": "192",
-            }
-        ],
-        "keepvideo": True,
+    safe_name = re.sub(r'[\\/*?:"<>|]', "_", clean_title)[:80].strip()
+    video_path = song_dir / f"{safe_name} [{video_id}].mp4"
+    audio_path = song_dir / f"{safe_name} [{video_id}].m4a"
+    cover_path = song_dir / "cover.jpg"
+
+    print(f"Downloading MP4 stream to {video_path.name}…")
+    v_req = urllib.request.Request(video_url, headers={"User-Agent": "Mozilla/5.0"})
+    with urllib.request.urlopen(v_req, timeout=90) as v_resp, open(video_path, "wb") as out_v:
+        shutil.copyfileobj(v_resp, out_v)
+
+    print(f"Extracting M4A audio to {audio_path.name}…")
+    cmd = [
+        "ffmpeg", "-y", "-i", str(video_path),
+        "-vn", "-c:a", "aac", "-b:a", "192k",
+        str(audio_path),
+    ]
+    res = subprocess.run(cmd, capture_output=True)
+    if res.returncode != 0:
+        raise RuntimeError(f"ffmpeg audio extraction failed: {res.stderr.decode('utf-8', errors='ignore')}")
+
+    if cover_url:
+        try:
+            print("Downloading cover artwork…")
+            c_req = urllib.request.Request(cover_url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(c_req, timeout=30) as c_resp, open(cover_path, "wb") as out_c:
+                shutil.copyfileobj(c_resp, out_c)
+        except Exception as err:
+            print(f"Warning: could not download cover image: {err}")
+
+    metadata = {
+        "id": video_id,
+        "title": clean_title,
+        "uploader": author,
+        "channel": author,
+        "duration": duration,
+        "thumbnail": cover_url or "",
     }
-
-    with YoutubeDL(options) as downloader:
-        metadata = downloader.extract_info(url, download=True)
-
-    matching_files = sorted(
-        (path for path in song_dir.iterdir() if video_id in path.name),
-        key=lambda path: path.stat().st_mtime,
-        reverse=True,
-    )
-    video_path = next((path for path in matching_files if path.suffix.lower() == ".mp4"), None)
-    audio_path = next((path for path in matching_files if path.suffix.lower() in AUDIO_EXTENSIONS), None)
-
-    if video_path is None or audio_path is None:
-        raise RuntimeError("The download completed, but the expected MP4 or M4A file was not created.")
     return video_path, audio_path, metadata, song_dir
+
+
+def download_media(
+    url: str,
+    songs_dir: Path,
+    cookies: Path | None = None,
+    cookies_from_browser: str | None = None,
+) -> tuple[Path, Path, dict[str, Any], Path]:
+    """Download the MP4 and extract an M4A into songs/<song-name>/."""
+    cookie_opts = build_ydl_cookie_opts(cookies, cookies_from_browser)
+
+    try:
+        metadata = fetch_metadata(url, cookie_opts)
+        video_id = str(metadata["id"])
+        title = str(metadata.get("title") or video_id)
+        song_dir = songs_dir / song_folder_name(title, video_id)
+        song_dir.mkdir(parents=True, exist_ok=True)
+
+        options: dict[str, Any] = {
+            "format": "bv*+ba/b",
+            "merge_output_format": "mp4",
+            "outtmpl": str(song_dir / "%(title).80s [%(id)s].%(ext)s"),
+            "noplaylist": True,
+            "restrictfilenames": True,
+            "postprocessors": [
+                {
+                    "key": "FFmpegExtractAudio",
+                    "preferredcodec": "m4a",
+                    "preferredquality": "192",
+                }
+            ],
+            "keepvideo": True,
+        }
+        options.update(cookie_opts)
+
+        with YoutubeDL(options) as downloader:
+            metadata = downloader.extract_info(url, download=True)
+
+        matching_files = sorted(
+            (path for path in song_dir.iterdir() if video_id in path.name),
+            key=lambda path: path.stat().st_mtime,
+            reverse=True,
+        )
+        video_path = next((path for path in matching_files if path.suffix.lower() == ".mp4"), None)
+        audio_path = next((path for path in matching_files if path.suffix.lower() in AUDIO_EXTENSIONS), None)
+
+        if video_path is None or audio_path is None:
+            raise RuntimeError("The download completed, but the expected MP4 or M4A file was not created.")
+        return video_path, audio_path, metadata, song_dir
+    except Exception as exc:
+        print(f"yt-dlp extraction note: {exc}")
+        print("Switching to direct stream fallback…")
+        return download_media_fallback(url, songs_dir)
 
 
 def transcribe_audio(audio_path: Path, language: str | None, api_key: str) -> list[TimedWord]:
@@ -254,11 +369,15 @@ def update_spotify_catalog(
     existing = next((song for song in songs if isinstance(song, dict) and song.get("id") == video_id), {})
     downloaded_title = str(metadata.get("title") or video_id)
     downloaded_author = str(metadata.get("uploader") or metadata.get("channel") or "TikTok creator")
+
+    cover_file = next((p for p in song_dir.iterdir() if p.name.lower() in ("cover.jpg", "cover.png", "image.png")), None)
+    default_cover = project_relative_path(cover_file) if cover_file else ""
+
     entry = {
         "id": video_id,
         "title": existing.get("title", downloaded_title),
         "author": existing.get("author", downloaded_author),
-        "coverPath": existing.get("coverPath", ""),
+        "coverPath": existing.get("coverPath", default_cover),
         "thumbnailUrl": metadata.get("thumbnail", ""),
         "sourceUrl": source_url,
         "folderPath": project_relative_path(song_dir),
@@ -266,9 +385,9 @@ def update_spotify_catalog(
         "audioPath": project_relative_path(audio_path),
         "lyricsPath": project_relative_path(lrc_path),
         "durationSeconds": metadata.get("duration"),
-        "top": existing.get("top", False),
-        "madeForYou": existing.get("madeForYou", False),
-        "recentlyAdded": existing.get("recentlyAdded", False),
+        "top": existing.get("top", True),
+        "madeForYou": existing.get("madeForYou", True),
+        "recentlyAdded": existing.get("recentlyAdded", True),
         "nowPlaying": existing.get("nowPlaying", False),
     }
 
@@ -286,7 +405,12 @@ def main() -> int:
     api_key = require_dependencies()
 
     print("Downloading video and extracting audio…")
-    video_path, audio_path, metadata, song_dir = download_media(args.url, args.songs_dir)
+    video_path, audio_path, metadata, song_dir = download_media(
+        args.url,
+        args.songs_dir,
+        cookies=args.cookies,
+        cookies_from_browser=args.cookies_from_browser,
+    )
     print(f"Video: {video_path}")
     print(f"Audio: {audio_path}")
 
