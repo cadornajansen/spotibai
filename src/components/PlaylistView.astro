@@ -1,0 +1,32 @@
+---
+import { Play } from 'lucide-astro';
+import TrackRow from './TrackRow.astro';
+import type { Playlist } from '../types/library';
+
+interface Props { playlist: Playlist; }
+const { playlist } = Astro.props;
+---
+
+<section class="hidden px-4 pb-12 pt-7 sm:px-7 xl:px-9" data-playlist-view data-playlist-id={playlist.id} aria-label={`${playlist.title} playlist`}>
+  <div class="-mx-4 bg-[#282828] px-4 pb-7 pt-10 sm:-mx-7 sm:px-7 xl:-mx-9 xl:px-9">
+    <div class="flex items-end gap-5">
+      <img class="size-32 rounded object-cover shadow-2xl sm:size-44" src={playlist.cover} alt={`${playlist.title} playlist cover`} width="176" height="176" loading="lazy" />
+      <div class="min-w-0">
+        <p class="text-xs font-bold uppercase tracking-[0.12em] text-white">Playlist</p>
+        <h2 class="mt-2 truncate text-3xl font-black tracking-tight text-white sm:text-5xl">{playlist.title}</h2>
+        <p class="mt-3 text-sm text-[#b3b3b3]">{playlist.description}</p>
+        <p class="mt-2 text-xs text-[#b3b3b3]">Spotibai · {playlist.tracks.length} songs</p>
+      </div>
+    </div>
+  </div>
+  <div class="mt-6 flex items-center gap-4">
+    <button class="grid size-12 place-items-center rounded-full bg-lime text-black transition hover:scale-105" type="button" data-playlist-play={playlist.id} aria-label={`Play ${playlist.title}`}><Play size={22} fill="currentColor" /></button>
+    <span class="text-sm text-[#b3b3b3]">{playlist.tracks.length} tracks</span>
+  </div>
+  <div class="mt-6 border-t border-line pt-3">
+    <div class="grid grid-cols-[28px_minmax(0,1fr)_42px] gap-3 px-2 pb-2 text-xs font-medium text-[#b3b3b3]"><span>#</span><span>Title</span><span class="text-right">Time</span></div>
+    <div class="space-y-1">
+      {playlist.tracks.map((track, index) => <TrackRow track={track} index={index} />)}
+    </div>
+  </div>
+</section>

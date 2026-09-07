@@ -1,0 +1,232 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+
+  "model": "assemblyai/gpt-5.6-luna",
+  "small_model": "assemblyai/gpt-5-mini",
+
+  "plugin": ["@upstash/context7-opencode"],
+
+  "mcp": {
+    "anysearch": {
+      "type": "remote",
+      "url": "https://api.anysearch.com/mcp",
+      "enabled": true,
+      "oauth": false,
+      "timeout": 10000,
+      "headers": {
+        "Authorization": "Bearer {env:ANYSEARCH_API_KEY}"
+      }
+    }
+  },
+
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 10000
+  },
+
+  "agent": {
+    "build": {
+      "mode": "primary",
+      "permission": {
+        "task": {
+          "*": "deny",
+          "explore": "allow"
+        }
+      }
+    },
+
+    "plan": {
+      "mode": "primary",
+      "model": "assemblyai/gpt-5.6-sol",
+      "steps": 8,
+      "permission": {
+        "task": "deny"
+      }
+    },
+
+    "explore": {
+      "description": "Fast read-only repository exploration",
+      "mode": "subagent",
+      "model": "opencode/mimo-v2.5-free",
+      "steps": 8,
+      "permission": {
+        "read": "allow",
+        "glob": "allow",
+        "grep": "allow",
+        "lsp": "allow",
+        "list": "allow",
+
+        "edit": "deny",
+        "bash": "deny",
+        "task": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "skill": "deny"
+      }
+    }
+  },
+
+  "provider": {
+    "assemblyai": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "AssemblyAI LLM Gateway",
+
+      "options": {
+        "baseURL": "https://llm-gateway.assemblyai.com/v1",
+        "headers": {
+          "Authorization": "{env:ASSEMBLYAI_API_KEY}"
+        }
+      },
+
+      "models": {
+        "gpt-5-nano": {
+          "name": "GPT-5 Nano",
+          "options": {
+            "reasoningEffort": "none"
+          }
+        },
+
+        "gpt-5-mini": {
+          "name": "GPT-5 Mini",
+          "options": {
+            "reasoningEffort": "none"
+          }
+        },
+
+        "gpt-4.1": {
+          "name": "GPT-4.1"
+        },
+
+        "gpt-5": {
+          "name": "GPT-5",
+          "options": {
+            "reasoningEffort": "none"
+          }
+        },
+
+        "gpt-5.1": {
+          "name": "GPT-5.1",
+          "options": {
+            "reasoningEffort": "none"
+          }
+        },
+
+        "gpt-5.2": {
+          "name": "GPT-5.2",
+          "options": {
+            "reasoningEffort": "none"
+          }
+        },
+
+        "gpt-5.5": {
+          "name": "GPT-5.5",
+          "options": {
+            "reasoningEffort": "none"
+          }
+        },
+
+        "gpt-5.6-luna": {
+          "name": "GPT-5.6 Luna",
+          "options": {
+            "reasoningEffort": "none"
+          }
+        },
+
+        "gpt-5.6-terra": {
+          "name": "GPT-5.6 Terra",
+          "options": {
+            "reasoningEffort": "none"
+          }
+        },
+
+        "gpt-5.6-sol": {
+          "name": "GPT-5.6 Sol",
+          "options": {
+            "reasoningEffort": "none"
+          }
+        },
+
+        "claude-haiku-4-5-20251001": {
+          "name": "Claude Haiku 4.5"
+        },
+
+        "claude-sonnet-4-5-20250929": {
+          "name": "Claude Sonnet 4.5"
+        },
+
+        "claude-sonnet-4-6": {
+          "name": "Claude Sonnet 4.6"
+        },
+
+        "claude-sonnet-5": {
+          "name": "Claude Sonnet 5"
+        },
+
+        "claude-opus-4-5-20251101": {
+          "name": "Claude Opus 4.5"
+        },
+
+        "claude-opus-4-6": {
+          "name": "Claude Opus 4.6"
+        },
+
+        "claude-opus-4-7": {
+          "name": "Claude Opus 4.7"
+        },
+
+        "claude-opus-4-8": {
+          "name": "Claude Opus 4.8"
+        },
+
+        "claude-opus-5": {
+          "name": "Claude Opus 5"
+        },
+
+        "gemini-2.5-flash-lite": {
+          "name": "Gemini 2.5 Flash Lite"
+        },
+
+        "gemini-2.5-flash": {
+          "name": "Gemini 2.5 Flash"
+        },
+
+        "gemini-2.5-pro": {
+          "name": "Gemini 2.5 Pro"
+        },
+
+        "gemini-3.1-flash-lite": {
+          "name": "Gemini 3.1 Flash Lite"
+        },
+
+        "gemini-3.5-flash-lite": {
+          "name": "Gemini 3.5 Flash Lite"
+        },
+
+        "gemini-3.5-flash": {
+          "name": "Gemini 3.5 Flash"
+        },
+
+        "gemini-3.6-flash": {
+          "name": "Gemini 3.6 Flash"
+        },
+
+        "gemini-3.7-flash": {
+          "name": "Gemini 3.7 Flash"
+        },
+
+        "gemma-4-31b": {
+          "name": "Gemma 4 31B"
+        },
+
+        "qwen3-32B": {
+          "name": "Qwen3 32B"
+        },
+
+        "qwen3-next-80b-a3b": {
+          "name": "Qwen3 Next 80B A3B"
+        }
+      }
+    }
+  }
+}

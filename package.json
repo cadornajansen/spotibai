@@ -1,0 +1,26 @@
+{
+  "name": "spotibai",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "backfill:likes": "node src/scripts/backfill-likes.mjs",
+    "generate:icons": "node src/scripts/generate-favicons.mjs"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "@astrojs/vercel": "^8.2.11",
+    "@tailwindcss/vite": "^4.1.12",
+    "@upstash/redis": "^1.38.4",
+    "astro": "^5.13.5",
+    "lucide-astro": "^0.542.0",
+    "tailwindcss": "^4.1.12"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "featuredPlaylists": [
+    { "id": "playlist-ship-it", "title": "Ship It Slowly", "description": "Soft focus for loud deadlines", "cover": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=720&q=80", "accent": "#8364ff", "trackId": "bug-fix-2am" },
+    { "id": "playlist-neon-queue", "title": "Neon Queue", "description": "Late-night commits & city lights", "cover": "https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=720&q=80", "accent": "#c8ff3d", "trackId": "deploy-friday" },
+    { "id": "playlist-small-wins", "title": "Small Wins", "description": "Tiny celebrations on repeat", "cover": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=720&q=80", "accent": "#ff9f6e", "trackId": "unread-messages" },
+    { "id": "playlist-rollback", "title": "Rollback Ritual", "description": "For when prod gets dramatic", "cover": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=720&q=80", "accent": "#7de2d1", "trackId": "404-feelings" },
+    { "id": "playlist-focus-mode", "title": "Focus Mode: On", "description": "No notifications, just momentum", "cover": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=720&q=80", "accent": "#7aa8ff", "trackId": "ctrl-z-life" },
+    { "id": "playlist-airplane", "title": "Airplane Mode", "description": "Signals off, feelings on", "cover": "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=720&q=80", "accent": "#ee72c9", "trackId": "merge-conflict" },
+    { "id": "playlist-standup", "title": "Standup, Sit Down", "description": "A daily meeting escape hatch", "cover": "https://images.unsplash.com/photo-1524650359799-842906ca1c06?auto=format&fit=crop&w=720&q=80", "accent": "#f6d365", "trackId": "pixel-perfect" },
+    { "id": "playlist-offline", "title": "Offline, Mostly", "description": "Rainy windows and loose ends", "cover": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=720&q=80", "accent": "#a88cff", "trackId": "cache-miss" }
+  ],
+  "recentlyPlayed": [
+    { "id": "recent-bug", "title": "Bug Fix at 2AM", "artist": "The Stack Traces", "cover": "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=720&q=80", "duration": "3:42", "accent": "#c8ff3d", "trackId": "bug-fix-2am" },
+    { "id": "recent-deploy", "title": "Deploy on Friday", "artist": "Production Panic", "cover": "https://images.unsplash.com/photo-1519608487953-e999c86e7454?auto=format&fit=crop&w=720&q=80", "duration": "2:58", "accent": "#8364ff", "trackId": "deploy-friday" },
+    { "id": "recent-unread", "title": "Unread Messages", "artist": "Seen at 3:14", "cover": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=720&q=80", "duration": "3:21", "accent": "#ff9f6e", "trackId": "unread-messages" },
+    { "id": "recent-404", "title": "404 Feelings Not Found", "artist": "Runtime Romance", "cover": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=720&q=80", "duration": "4:09", "accent": "#ee72c9", "trackId": "404-feelings" },
+    { "id": "recent-ctrlz", "title": "Ctrl + Z My Life", "artist": "Undo Club", "cover": "https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=720&q=80", "duration": "3:36", "accent": "#7de2d1", "trackId": "ctrl-z-life" },
+    { "id": "recent-merge", "title": "Merge Conflict", "artist": "The Pull Requests", "cover": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=720&q=80", "duration": "3:55", "accent": "#7aa8ff", "trackId": "merge-conflict" }
+  ],
+  "madeForYou": [
+    { "id": "mix-night", "title": "Night Shift Mix", "description": "A lucid blend for your second wind", "cover": "https://images.unsplash.com/photo-1571266028243-d220c9c3b2b6?auto=format&fit=crop&w=720&q=80", "accent": "#8364ff", "trackId": "bug-fix-2am" },
+    { "id": "mix-compile", "title": "Compile & Unwind", "description": "Warm bass, cold coffee", "cover": "https://images.unsplash.com/photo-1516280440614-37939bbacd81?auto=format&fit=crop&w=720&q=80", "accent": "#c8ff3d", "trackId": "deploy-friday" },
+    { "id": "mix-ghost", "title": "Ghost in the Tabs", "description": "Haunted browser history, bright hooks", "cover": "https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=720&q=80", "accent": "#ff6fae", "trackId": "unread-messages" },
+    { "id": "mix-prism", "title": "Prism Break Mix", "description": "Color-coded chaos, carefully sequenced", "cover": "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=720&q=80", "accent": "#79b7ff", "trackId": "404-feelings" },
+    { "id": "mix-loop", "title": "The Good Loop", "description": "One more song, one more small task", "cover": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=720&q=80", "accent": "#f6d365", "trackId": "ctrl-z-life" },
+    { "id": "mix-morning", "title": "Morning Merge", "description": "Gentle starts for complicated branches", "cover": "https://images.unsplash.com/photo-1519608487953-e999c86e7454?auto=format&fit=crop&w=720&q=80", "accent": "#71e6cd", "trackId": "merge-conflict" }
+  ],
+  "tracks": [
+    { "id": "bug-fix-2am", "title": "Bug Fix at 2AM", "artist": "The Stack Traces", "cover": "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=720&q=80", "duration": "3:42", "accent": "#c8ff3d" },
+    { "id": "deploy-friday", "title": "Deploy on Friday", "artist": "Production Panic", "cover": "https://images.unsplash.com/photo-1519608487953-e999c86e7454?auto=format&fit=crop&w=720&q=80", "duration": "2:58", "accent": "#8364ff" },
+    { "id": "unread-messages", "title": "Unread Messages", "artist": "Seen at 3:14", "cover": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&w=720&q=80", "duration": "3:21", "accent": "#ff9f6e" },
+    { "id": "404-feelings", "title": "404 Feelings Not Found", "artist": "Runtime Romance", "cover": "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=720&q=80", "duration": "4:09", "accent": "#ee72c9" },
+    { "id": "ctrl-z-life", "title": "Ctrl + Z My Life", "artist": "Undo Club", "cover": "https://images.unsplash.com/photo-1524368535928-5b5e00ddc76b?auto=format&fit=crop&w=720&q=80", "duration": "3:36", "accent": "#7de2d1" },
+    { "id": "merge-conflict", "title": "Merge Conflict", "artist": "The Pull Requests", "cover": "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=720&q=80", "duration": "3:55", "accent": "#7aa8ff" },
+    { "id": "pixel-perfect", "title": "Pixel Perfect", "artist": "Margin Error", "cover": "https://images.unsplash.com/photo-1524650359799-842906ca1c06?auto=format&fit=crop&w=720&q=80", "duration": "2:47", "accent": "#f6d365" },
+    { "id": "cache-miss", "title": "Cache Miss", "artist": "Cold Start", "cover": "https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=720&q=80", "duration": "3:18", "accent": "#a88cff" },
+    { "id": "silent-mode", "title": "Silent Mode", "artist": "Do Not Disturb", "cover": "https://images.unsplash.com/photo-1531058020387-3be344556be6?auto=format&fit=crop&w=720&q=80", "duration": "4:02", "accent": "#ff6fae" },
+    { "id": "last-tab", "title": "Last Tab Open", "artist": "Browser Choir", "cover": "https://images.unsplash.com/photo-1501386761578-eac5c94b800a?auto=format&fit=crop&w=720&q=80", "duration": "3:06", "accent": "#71e6cd" }
+  ],
+  "nowPlaying": { "id": "bug-fix-2am", "title": "Bug Fix at 2AM", "artist": "The Stack Traces", "cover": "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=720&q=80", "duration": "3:42", "accent": "#c8ff3d" }
+}

@@ -1,0 +1,26 @@
+---
+import { Bell, ChevronLeft, ChevronRight, Search, UserRound, X } from 'lucide-astro';
+import spotifyLogo from '../assets/spotify-logo.png';
+---
+
+<header class="sticky top-0 z-20 flex h-14 sm:h-[72px] items-center gap-2 sm:gap-3 border-b border-line bg-[#000]/95 px-3 sm:px-7 backdrop-blur-md transition-colors">
+  <a class="flex shrink-0 items-center gap-2 text-base sm:text-lg font-bold tracking-tight text-white lg:hidden transition-transform active:scale-95" href="/" aria-label="Spotibai home">
+    <img class="size-7 sm:size-6" src={spotifyLogo.src} alt="" width="28" height="28" />
+    <span class="hidden sm:inline font-black tracking-[-0.06em]">Spotibai</span>
+  </a>
+  <div class="hidden items-center gap-2 xl:flex">
+    <button class="grid size-8 place-items-center rounded-full bg-[#121212] text-[#b3b3b3] transition hover:text-white" type="button" data-history-back aria-label="Go back"><ChevronLeft size={18} /></button>
+    <button class="grid size-8 place-items-center rounded-full bg-[#121212] text-[#b3b3b3] transition hover:text-white" type="button" data-history-forward aria-label="Go forward"><ChevronRight size={18} /></button>
+  </div>
+  <label id="search" class="group/search relative flex h-10 sm:h-11 max-w-[590px] flex-1 items-center gap-2 sm:gap-2.5 rounded-full bg-[#242424] px-3 sm:px-4 text-[#b3b3b3] transition-all duration-200 ease-out hover:bg-[#2a2a2a] hover:shadow-[0_0_0_1px_rgba(255,255,255,0.08)] focus-within:bg-[#282828] focus-within:text-white focus-within:shadow-[0_0_0_1px_rgba(255,255,255,0.22),0_4px_24px_rgba(0,0,0,0.6)]">
+    <Search size={18} class="shrink-0 text-[#b3b3b3] transition-colors duration-200 group-hover/search:text-white group-focus-within/search:text-[#1ed760]" />
+    <input class="min-w-0 flex-1 bg-transparent text-xs sm:text-sm text-white outline-none border-none ring-0 placeholder:text-[#888] placeholder:transition-colors focus:placeholder:text-[#555]" type="search" placeholder="What do you want to play?" aria-label="Search music" data-search-input />
+    <button type="button" class="hidden size-5 shrink-0 place-items-center rounded-full bg-[#3e3e3e] text-[#b3b3b3] transition hover:bg-[#505050] hover:text-white active:scale-90" data-search-clear aria-label="Clear search">
+      <X size={13} />
+    </button>
+  </label>
+  <div class="flex shrink-0 items-center gap-2">
+    <button type="button" class="hidden grid size-9 place-items-center rounded-full text-[#b3b3b3] hover:text-white sm:grid" aria-label="Notifications"><Bell size={18} /></button>
+    <button type="button" class="grid size-8 sm:size-9 place-items-center rounded-full bg-[#242424] text-white transition hover:bg-[#2f2f2f] hover:scale-105 active:scale-95" aria-label="Open profile"><UserRound size={17} /></button>
+  </div>
+</header>
