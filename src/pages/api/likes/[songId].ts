@@ -28,10 +28,14 @@ const json = (body: object, status = 200) => new Response(JSON.stringify(body), 
 });
 
 const getRedis = () => {
-  const url = import.meta.env.UPSTASH_REDIS_REST_URL;
-  const token = import.meta.env.UPSTASH_REDIS_REST_TOKEN;
-  if (!url || !token) return null;
-  return new Redis({ url, token });
+  const url = process.env.UPSTASH_REDIS_REST_URL || import.meta.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || import.meta.env.UPSTASH_REDIS_REST_TOKEN;
+  if (url && token) return new Redis({ url, token });
+  try {
+    return Redis.fromEnv();
+  } catch {
+    return null;
+  }
 };
 
 const getVisitorId = (cookies: Parameters<APIRoute>[0]['cookies']) => {
@@ -60,7 +64,10 @@ export const GET: APIRoute = async ({ params, cookies }) => {
   const { songId } = params;
   if (!validateSongId(songId)) return json({ error: 'Song not found' }, 404);
   const redis = getRedis();
-  if (!redis) return json({ count: 0, liked: false, configured: false });
+  if (!redis) {
+    console.warn('[Likes API] Redis is not configured! Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Vercel Environment Variables.');
+    return json({ count: 0, liked: false, configured: false });
+  }
 
   try {
     const visitorId = getVisitorId(cookies);
@@ -80,7 +87,10 @@ export const POST: APIRoute = async ({ params, cookies }) => {
   const { songId } = params;
   if (!validateSongId(songId)) return json({ error: 'Song not found' }, 404);
   const redis = getRedis();
-  if (!redis) return json({ count: 0, liked: false, configured: false });
+  if (!redis) {
+    console.warn('[Likes API] Redis is not configured! Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN in Vercel Environment Variables.');
+    return json({ count: 0, liked: false, configured: false });
+  }
 
   try {
     const visitorId = getVisitorId(cookies);

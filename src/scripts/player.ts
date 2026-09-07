@@ -83,15 +83,17 @@ if (app) {
       if (!response.ok) throw new Error('Like request failed');
       const state = await response.json() as LikeState;
       if (requestId !== likeRequestId || track.id !== currentTrack.id) return;
-      renderLikeState(state);
       if (state.configured === false) {
-        setLikeStatus('Likes are unavailable until Redis is configured.');
+        console.warn('[Spotibai] Upstash Redis is not configured in Vercel Environment Variables. Add UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN.');
+        setLikeStatus('Likes are unavailable until Redis is configured in Vercel.');
+        renderLikeState({ count: Number(all<HTMLElement>('[data-like-count]')[0]?.textContent) || 0, liked: false, configured: false }, false);
         return;
       }
+      renderLikeState(state);
       setLikeStatus(`${state.count} ${state.count === 1 ? 'like' : 'likes'}; ${state.liked ? 'liked' : 'not liked'}`);
     } catch {
       if (requestId !== likeRequestId || track.id !== currentTrack.id) return;
-      renderLikeState({ count: 0, liked: false });
+      renderLikeState({ count: Number(all<HTMLElement>('[data-like-count]')[0]?.textContent) || 0, liked: false });
       setLikeStatus(method === 'GET' ? 'Could not load likes' : 'Could not update like');
     } finally {
       if (requestId === likeRequestId) likeRequestPending = false;
