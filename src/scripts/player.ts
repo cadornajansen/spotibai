@@ -26,7 +26,10 @@ if (app) {
   const searchClear = document.querySelector<HTMLButtonElement>('[data-search-clear]');
   const playlistViews = Array.from(document.querySelectorAll<HTMLElement>('[data-playlist-view]'));
 
-  let currentTrack = nowPlaying;
+  const trackById = new Map(tracks.map((track) => [track.id, track]));
+  const playlistById = new Map(playlists.map((playlist) => [playlist.id, playlist]));
+  const initialTrackId = app.dataset.initialTrackId || new URLSearchParams(window.location.search).get('track') || new URLSearchParams(window.location.search).get('song');
+  let currentTrack = (initialTrackId ? trackById.get(initialTrackId) : null) ?? nowPlaying;
   let isPlaying = false;
   let lyricLines: LyricLine[] = [];
   let activeLyricIndex = -1;
@@ -35,9 +38,6 @@ if (app) {
   let isSeeking = false;
   let progressRafId: number | null = null;
   let currentPlaylist: (typeof playlists)[number] | null = null;
-
-  const trackById = new Map(tracks.map((track) => [track.id, track]));
-  const playlistById = new Map(playlists.map((playlist) => [playlist.id, playlist]));
   const all = <T extends Element>(selector: string) => Array.from(document.querySelectorAll<T>(selector));
   const setText = (selector: string, value: string) => all<HTMLElement>(selector).forEach((element) => { element.textContent = value; });
   const setImage = (selector: string, track: Track) => all<HTMLImageElement>(selector).forEach((image) => {
@@ -219,29 +219,36 @@ if (app) {
     return [{ time: Number(match[1]) * 60 + Number(match[2]) + Number(match[3]) / 100, text: match[4].trim() }];
   });
 
+  let lyricsRequestId = 0;
+
   const loadLyrics = async (track: Track) => {
+    const requestId = ++lyricsRequestId;
     lyricLines = [];
     activeLyricIndex = -1;
     if (!lyricsContainer || !lyricsEmpty) return;
     lyricsContainer.replaceChildren();
     lyricsEmpty.classList.add('hidden');
+    if (lyricsScroll) lyricsScroll.scrollTop = 0;
 
     try {
       const response = await fetch(track.lyricsSrc);
       if (!response.ok) throw new Error('Lyrics file not found');
-      const lines = parseLrc(await response.text());
+      const text = await response.text();
+      if (requestId !== lyricsRequestId || track.id !== currentTrack.id) return;
+      const lines = parseLrc(text);
       if (lines.length === 0) throw new Error('Lyrics file has no timed lines');
       lyricLines = lines.map((line) => {
         const element = document.createElement('button');
         element.type = 'button';
         element.dataset.lyricTime = String(line.time);
-        element.className = 'block w-full text-left text-2xl font-bold leading-tight text-[#c9aa9a] opacity-40 scale-100 transition-all duration-300 origin-left hover:text-white hover:opacity-80 sm:text-5xl';
+        element.className = 'block w-full text-left text-2xl font-bold leading-tight text-[#c9aa9a] opacity-40 scale-100 transition-all duration-300 origin-left hover:text-white hover:scale-105 active:scale-95 sm:text-5xl';
         element.textContent = line.text;
         lyricsContainer.append(element);
         return { time: line.time, element };
       });
       renderLyrics();
     } catch {
+      if (requestId !== lyricsRequestId || track.id !== currentTrack.id) return;
       lyricsEmpty.classList.remove('hidden');
     }
   };
@@ -250,8 +257,60 @@ if (app) {
     hideViews();
     animateViewIn(lyricsView);
     main?.scrollTo({ top: 0 });
+    if (lyricsScroll) lyricsScroll.scrollTop = 0;
     void loadLyrics(currentTrack);
     if (shouldStore) storeView({ view: 'lyrics' });
+  };
+
+  const handleShare = async (_button?: HTMLButtonElement) => {
+    const track = currentTrack;
+    const shareUrl = `${window.location.origin}/track/${encodeURIComponent(track.id)}`;
+    let shared = false;
+
+    if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
+      try {
+        await navigator.share({
+          title: `${track.title} — ${track.artist}`,
+          text: `Paminawa ang "${track.title}" ni ${track.artist} sa Spotibai!`,
+          url: shareUrl,
+        });
+        shared = true;
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
+      }
+    }
+
+    if (!shared) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+      } catch {
+        const temp = document.createElement('input');
+        temp.value = shareUrl;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+      }
+    }
+
+    all<HTMLElement>('[data-share-tooltip]').forEach((tip) => {
+      tip.textContent = shared ? 'Shared!' : 'Link copied!';
+      tip.classList.remove('opacity-0', 'pointer-events-none');
+      tip.classList.add('opacity-100');
+    });
+    all<HTMLButtonElement>('[data-share-button]').forEach((btn) => {
+      btn.classList.add('text-lime');
+    });
+
+    setTimeout(() => {
+      all<HTMLElement>('[data-share-tooltip]').forEach((tip) => {
+        tip.classList.add('opacity-0', 'pointer-events-none');
+        tip.classList.remove('opacity-100');
+      });
+      all<HTMLButtonElement>('[data-share-button]').forEach((btn) => {
+        btn.classList.remove('text-lime');
+      });
+    }, 2000);
   };
 
   const setRangeFill = (input: HTMLInputElement) => {
@@ -303,9 +362,13 @@ if (app) {
     setText('[data-player-title], [data-now-title], [data-lyrics-title]', track.title);
     setText('[data-player-artist], [data-now-artist], [data-lyrics-artist]', track.artist);
     setImage('[data-player-cover], [data-now-cover], [data-lyrics-cover]', track);
+    all<HTMLButtonElement>('[data-share-button]').forEach((btn) => {
+      btn.setAttribute('aria-label', `Share ${track.title}`);
+    });
     renderVideo(track);
     renderLikeState({ count: 0, liked: false }, true);
     void requestLikeState('GET');
+    void loadLyrics(track);
 
     if (audio) {
       audio.pause();
@@ -314,7 +377,11 @@ if (app) {
       updateProgress();
       audio.play().then(() => { isPlaying = true; renderPlaybackState(); }).catch(() => { isPlaying = false; renderPlaybackState(); });
     }
-    if (shouldOpenLyrics) openLyrics(true);
+    if (shouldOpenLyrics) {
+      openLyrics(true);
+    } else if (lyricsView && !lyricsView.classList.contains('hidden')) {
+      if (lyricsScroll) lyricsScroll.scrollTop = 0;
+    }
   };
 
   const renderSearchResults = (query: string) => {
@@ -419,6 +486,12 @@ if (app) {
     if (lyricButton && audio) {
       audio.currentTime = Number(lyricButton.dataset.lyricTime);
       if (audio.paused) audio.play().catch(() => undefined);
+      return;
+    }
+
+    const shareButton = target.closest<HTMLButtonElement>('[data-share-button]');
+    if (shareButton) {
+      void handleShare(shareButton);
       return;
     }
 
@@ -560,6 +633,7 @@ if (app) {
   renderVideo(currentTrack);
   renderPlaybackState();
   void requestLikeState('GET');
+  void loadLyrics(currentTrack);
   const initialHash = window.location.hash;
   if (initialHash === '#lyrics') {
     openLyrics(false);
@@ -568,6 +642,6 @@ if (app) {
   } else if (initialHash === '#search') {
     showSearch(false);
   } else {
-    window.history.replaceState({ view: 'home' } satisfies ViewState, '', window.location.pathname);
+    window.history.replaceState({ view: 'home' } satisfies ViewState, '', window.location.pathname + window.location.hash);
   }
 }

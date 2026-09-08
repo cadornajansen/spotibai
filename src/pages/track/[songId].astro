@@ -1,0 +1,62 @@
+---
+import AppLayout from '../../layouts/AppLayout.astro';
+import { tracks } from '../../data/spotify';
+import catalogData from '../../data/spotify.json';
+
+const { songId } = Astro.params;
+const track = tracks.find((t) => t.id === songId);
+
+if (!track) {
+  return Astro.redirect('/');
+}
+
+const siteUrl = (import.meta.env.PUBLIC_SITE_URL || process.env.PUBLIC_SITE_URL || 'https://spotibai.lol').replace(/\/+$/, '');
+const trackCoverUrl = track.cover.startsWith('http') ? track.cover : `${siteUrl}${track.cover.startsWith('/') ? track.cover : `/${track.cover}`}`;
+const trackAudioUrl = track.audioSrc ? (track.audioSrc.startsWith('http') ? track.audioSrc : `${siteUrl}${track.audioSrc.startsWith('/') ? track.audioSrc : `/${track.audioSrc}`}`) : undefined;
+const original = catalogData.songs.find((s) => s.id === track.id);
+
+const toIsoDuration = (seconds: number | null | undefined): string | undefined => {
+  if (!seconds || !Number.isFinite(seconds) || seconds <= 0) return undefined;
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.round(seconds % 60);
+  return `PT${mins}M${secs}S`;
+};
+
+const trackStructuredData = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'WebSite',
+      '@id': `${siteUrl}/#website`,
+      url: `${siteUrl}/`,
+      name: 'Spotibai',
+    },
+    {
+      '@type': 'MusicRecording',
+      '@id': `${siteUrl}/track/${track.id}`,
+      url: `${siteUrl}/track/${track.id}`,
+      name: track.title,
+      byArtist: {
+        '@type': 'MusicGroup',
+        name: track.artist,
+      },
+      image: trackCoverUrl,
+      inLanguage: 'ceb',
+      genre: 'Visayan Parody',
+      ...(original?.durationSeconds ? { duration: toIsoDuration(original.durationSeconds) } : {}),
+      ...(trackAudioUrl ? { audio: trackAudioUrl } : {}),
+      mainEntityOfPage: `${siteUrl}/track/${track.id}`,
+    },
+  ],
+};
+---
+
+<AppLayout
+  activeTrack={track}
+  pageTitle={`${track.title} — ${track.artist} | Spotibai`}
+  pageDescription={`Listen to "${track.title}" by ${track.artist} on Spotibai — kung ang kanta, mas Bisaya pa nimo.`}
+  canonicalPath={`/track/${track.id}`}
+  ogType="music.song"
+  ogImage={trackCoverUrl}
+  customStructuredData={trackStructuredData}
+/>
