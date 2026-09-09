@@ -41,18 +41,23 @@ const formatDuration = (seconds: number | null) => {
   return `${Math.floor(seconds / 60)}:${String(Math.round(seconds % 60)).padStart(2, '0')}`;
 };
 
-export const tracks: Track[] = catalog.songs.map((song) => ({
-  id: song.id,
-  title: song.title,
-  artist: song.author,
-  cover: toPublicPath(song.coverPath) || song.thumbnailUrl || fallbackCover,
-  duration: formatDuration(song.durationSeconds),
-  accent: '#1ed760',
-  audioSrc: toPublicPath(song.audioPath),
-  videoSrc: song.showVideo === false ? '' : toPublicPath(song.videoPath),
-  lyricsSrc: toPublicPath(song.lyricsPath),
-  artistBio: song.artistBio || `${song.author} is credited as the artist on this local track.`,
-}));
+const isExpiringCdn = (url?: string) => Boolean(url && (url.includes('tiktokcdn') || url.includes('x-expires')));
+
+export const tracks: Track[] = catalog.songs.map((song) => {
+  const safeThumbnail = song.thumbnailUrl && !isExpiringCdn(song.thumbnailUrl) ? song.thumbnailUrl : '';
+  return {
+    id: song.id,
+    title: song.title,
+    artist: song.author,
+    cover: toPublicPath(song.coverPath) || safeThumbnail || fallbackCover,
+    duration: formatDuration(song.durationSeconds),
+    accent: '#1ed760',
+    audioSrc: toPublicPath(song.audioPath),
+    videoSrc: song.showVideo === false ? '' : toPublicPath(song.videoPath),
+    lyricsSrc: toPublicPath(song.lyricsPath),
+    artistBio: song.artistBio || `${song.author} is credited as the artist on this local track.`,
+  };
+});
 
 const trackById = new Map(tracks.map((track) => [track.id, track]));
 

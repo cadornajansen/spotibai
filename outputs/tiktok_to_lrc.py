@@ -141,6 +141,45 @@ def fetch_metadata(url: str, cookie_opts: dict[str, Any] | None = None) -> dict[
     return info
 
 
+def ensure_cover_image(song_dir: Path, video_path: Path, thumbnail_url: str | None = None) -> Path | None:
+    cover_names = ("cover.jpg", "cover.png", "image.png")
+    for name in cover_names:
+        candidate = song_dir / name
+        if candidate.exists() and candidate.stat().st_size > 0:
+            return candidate
+
+    cover_target = song_dir / "cover.jpg"
+    if thumbnail_url:
+        try:
+            print("Downloading cover artwork…")
+            req = urllib.request.Request(thumbnail_url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=15) as resp, open(cover_target, "wb") as f:
+                shutil.copyfileobj(resp, f)
+            if cover_target.exists() and cover_target.stat().st_size > 0:
+                return cover_target
+        except Exception as exc:
+            print(f"Thumbnail download failed ({exc}), falling back to video frame extraction…")
+
+    if video_path.exists():
+        print("Extracting cover frame from video with ffmpeg…")
+        cmd = [
+            "ffmpeg", "-y",
+            "-ss", "00:00:01.5",
+            "-i", str(video_path),
+            "-vframes", "1",
+            "-q:v", "2",
+            str(cover_target),
+        ]
+        res = subprocess.run(cmd, capture_output=True)
+        if res.returncode != 0 or not cover_target.exists() or cover_target.stat().st_size == 0:
+            cmd[2] = "00:00:00.5"
+            subprocess.run(cmd, capture_output=True)
+
+    if cover_target.exists() and cover_target.stat().st_size > 0:
+        return cover_target
+    return None
+
+
 def download_media_fallback(url: str, songs_dir: Path) -> tuple[Path, Path, dict[str, Any], Path]:
     """Fallback extraction using public TikTok video stream when yt-dlp encounters cookie/auth blocks."""
     print("Extracting video stream via direct TikTok service…")
@@ -174,7 +213,6 @@ def download_media_fallback(url: str, songs_dir: Path) -> tuple[Path, Path, dict
     safe_name = re.sub(r'[\\/*?:"<>|]', "_", clean_title)[:80].strip()
     video_path = song_dir / f"{safe_name} [{video_id}].mp4"
     audio_path = song_dir / f"{safe_name} [{video_id}].m4a"
-    cover_path = song_dir / "cover.jpg"
 
     print(f"Downloading MP4 stream to {video_path.name}…")
     v_req = urllib.request.Request(video_url, headers={"User-Agent": "Mozilla/5.0"})
@@ -191,14 +229,7 @@ def download_media_fallback(url: str, songs_dir: Path) -> tuple[Path, Path, dict
     if res.returncode != 0:
         raise RuntimeError(f"ffmpeg audio extraction failed: {res.stderr.decode('utf-8', errors='ignore')}")
 
-    if cover_url:
-        try:
-            print("Downloading cover artwork…")
-            c_req = urllib.request.Request(cover_url, headers={"User-Agent": "Mozilla/5.0"})
-            with urllib.request.urlopen(c_req, timeout=30) as c_resp, open(cover_path, "wb") as out_c:
-                shutil.copyfileobj(c_resp, out_c)
-        except Exception as err:
-            print(f"Warning: could not download cover image: {err}")
+    ensure_cover_image(song_dir, video_path, cover_url)
 
     metadata = {
         "id": video_id,
@@ -257,6 +288,8 @@ def download_media(
 
         if video_path is None or audio_path is None:
             raise RuntimeError("The download completed, but the expected MP4 or M4A file was not created.")
+
+        ensure_cover_image(song_dir, video_path, metadata.get("thumbnail"))
         return video_path, audio_path, metadata, song_dir
     except Exception as exc:
         print(f"yt-dlp extraction note: {exc}")
@@ -370,14 +403,14 @@ def update_spotify_catalog(
     downloaded_title = str(metadata.get("title") or video_id)
     downloaded_author = str(metadata.get("uploader") or metadata.get("channel") or "TikTok creator")
 
-    cover_file = next((p for p in song_dir.iterdir() if p.name.lower() in ("cover.jpg", "cover.png", "image.png")), None)
+    cover_file = ensure_cover_image(song_dir, video_path, metadata.get("thumbnail"))
     default_cover = project_relative_path(cover_file) if cover_file else ""
 
     entry = {
         "id": video_id,
         "title": existing.get("title", downloaded_title),
         "author": existing.get("author", downloaded_author),
-        "coverPath": existing.get("coverPath", default_cover),
+        "coverPath": existing.get("coverPath") or default_cover,
         "thumbnailUrl": metadata.get("thumbnail", ""),
         "sourceUrl": source_url,
         "folderPath": project_relative_path(song_dir),
